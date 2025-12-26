@@ -1,4 +1,4 @@
-Modul **Obavještenja** (*Notifications*) — kompletna specifikacija v2.0
+### Modul **Obavještenja** (*Notifications*) — kompletna specifikacija
 
 ![WCAG AA](https://img.shields.io/badge/WCAG-2.1%20AA-2A6EF3) ![Flutter](https://img.shields.io/badge/Framework-Flutter-02569B) ![Platforms](https://img.shields.io/badge/Platforms-Web%20%7C%20iOS%20%7C%20Android-111)
 
