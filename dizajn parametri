@@ -1,0 +1,286 @@
+# Zgrada Plus — dizajn parametri
+
+Dokument je pisan da **Figma Make AI** (*Figma Make AI*) može dosljedno primijeniti postojeći **dizajn sistem** (*design system*) baziran na **dizajn tokenima** (*design tokens*) iz fajla `design-tokens.tokens.json`.
+
+---
+
+## 1) Osnovna pravila primjene
+
+1. Koristi isključivo **tokene** (*tokens*) i **stilove** (*styles*). Ne uvoditi „ručnu“ vrijednost (hard-coded) za boju, razmak, radius, tipografiju, sjenku.
+2. Prioritet: **semantički tokeni** (*semantic tokens*) → zatim **primitivni tokeni** (*primitives*).
+
+   * Semantika: `1. color modes.colors.*` i `1. color modes.component colors.*`
+   * Primitivi: `color.*`, `font.*`, `effect.*`, `grid.*`, `2. radius.*`, `3. spacing.*`, `4. widths.*`, `5. containers.*`, `typography.*`
+3. Sve komponente moraju imati konzistentne **state-ove** (*states*): default, hover (web), pressed, focused, disabled, error (kada je primjenjivo).
+4. **Fokus** (*focus*) obavezno koristi **focus ring** (*focus ring*) tokene iz `effect.focus rings.*`.
+5. **Tamni mod** (*dark mode*) i **svijetli mod** (*light mode*) se rješavaju isključivo preko semantičkih tokena (ne preko dupliranja boja po ekranu).
+
+---
+
+## 2) Tipografija
+
+### 2.1 Porodice fonta
+
+* **Display font** (*display font*): `6. typography.font family.font-family-display` = `Inter`
+* **Body font** (*body font*): `6. typography.font family.font-family-body` = `Inter`
+
+### 2.2 Skala veličina i line-height
+
+Koristi ove parove kao standardnu skalu za tekst i naslove:
+
+| Token                                 | **Veličina fonta** (*font size*) |              **Visina reda** (*line height*) |
+| ------------------------------------- | -------------------------------: | -------------------------------------------: |
+| `6. typography.font size.text-xs`     |                               12 |     `6. typography.line height.text-xs` = 18 |
+| `6. typography.font size.text-sm`     |                               14 |     `6. typography.line height.text-sm` = 20 |
+| `6. typography.font size.text-md`     |                               16 |     `6. typography.line height.text-md` = 24 |
+| `6. typography.font size.text-lg`     |                               18 |     `6. typography.line height.text-lg` = 28 |
+| `6. typography.font size.text-xl`     |                               20 |     `6. typography.line height.text-xl` = 30 |
+| `6. typography.font size.display-xs`  |                               24 |  `6. typography.line height.display-xs` = 32 |
+| `6. typography.font size.display-sm`  |                               30 |  `6. typography.line height.display-sm` = 38 |
+| `6. typography.font size.display-md`  |                               36 |  `6. typography.line height.display-md` = 44 |
+| `6. typography.font size.display-lg`  |                               48 |  `6. typography.line height.display-lg` = 60 |
+| `6. typography.font size.display-xl`  |                               60 |  `6. typography.line height.display-xl` = 72 |
+| `6. typography.font size.display-2xl` |                               72 | `6. typography.line height.display-2xl` = 90 |
+
+### 2.3 Težine fonta
+
+Koristi numeričke težine iz `font.*` stilova:
+
+* **Regular** (*regular*) = 400
+* **Medium** (*medium*) = 500
+* **Semibold** (*semibold*) = 600
+* **Bold** (*bold*) = 700
+
+### 2.4 Obavezni Figma tekst stilovi
+
+Koristi `font.*` stilove kao jedini izvor istine (svaka veličina ima `medium/semibold/bold` varijante):
+
+* `font.text xs.*`, `font.text sm.*`, `font.text md.*`, `font.text lg.*`, `font.text xl.*`
+* `font.display xs.*`, `font.display sm.*`, `font.display md.*`, `font.display lg.*`, `font.display xl.*`, `font.display 2xl.*`
+
+---
+
+## 3) Razmaci i layout
+
+### 3.1 Skala razmaka
+
+Koristi `3. spacing.*` kao jedinu skalu razmaka:
+
+| Token          | Vrijednost |
+| -------------- | ---------- |
+| `spacing-none` | 0px        |
+| `spacing-xxs`  | 2px        |
+| `spacing-xs`   | 4px        |
+| `spacing-sm`   | 6px        |
+| `spacing-md`   | 8px        |
+| `spacing-lg`   | 12px       |
+| `spacing-xl`   | 16px       |
+| `spacing-2xl`  | 20px       |
+| `spacing-3xl`  | 24px       |
+| `spacing-4xl`  | 32px       |
+| `spacing-5xl`  | 40px       |
+| `spacing-6xl`  | 48px       |
+| `spacing-7xl`  | 64px       |
+| `spacing-8xl`  | 80px       |
+| `spacing-9xl`  | 96px       |
+| `spacing-10xl` | 128px      |
+| `spacing-11xl` | 160px      |
+
+### 3.2 Kontejneri
+
+* **Max širina kontejnera** (*container max width*): `5. containers.container-max-width-desktop` = 1280px
+* **Padding desktop** (*desktop padding*): `5. containers.container-padding-desktop` = 32px
+* **Padding mobile** (*mobile padding*): `5. containers.container-padding-mobile` = 16px
+
+### 3.3 Maksimalne širine (content)
+
+* `4. widths.paragraph-max-width` = 720px (maks širina teksta za čitljivost)
+* Ostale širine: `4. widths.width-xxs…width-6xl` (320px…1920px)
+
+### 3.4 Grid sistem
+
+Primijeni odgovarajući **grid** (*grid*) token po breakpoint-u:
+
+* **Desktop grid** (*desktop grid*): `grid.grid desktop`
+
+  * 12 kolona, gutter 32, offset 112 (primary layout)
+* **Tablet grid** (*tablet grid*): `grid.grid tablet`
+
+  * 6 kolona, gutter 32, offset 32
+* **Mobile grid** (*mobile grid*): `grid.grid mobile`
+
+  * 4 kolone, gutter 16, offset 16
+
+---
+
+## 4) Radius (zaobljenja)
+
+Koristi `2. radius.*`:
+
+| Token         | Vrijednost |
+| ------------- | ---------: |
+| `radius-none` |          0 |
+| `radius-xxs`  |          2 |
+| `radius-xs`   |          4 |
+| `radius-sm`   |          6 |
+| `radius-md`   |          8 |
+| `radius-lg`   |         10 |
+| `radius-xl`   |         12 |
+| `radius-2xl`  |         16 |
+| `radius-3xl`  |         20 |
+| `radius-4xl`  |         24 |
+| `radius-full` |       9999 |
+
+Standardizacija:
+
+* Kartice, modali: `radius-xl` do `radius-2xl`
+* Dugmad: `radius-md` do `radius-lg`
+* Input polja: `radius-md`
+* Chip/badge: `radius-full` ili `radius-2xl` (u zavisnosti od visine)
+
+---
+
+## 5) Efekti (sjene i fokus)
+
+### 5.1 Sjene
+
+Koristi `effect.shadows.*`:
+
+* `shadow-xs`, `shadow-sm`, `shadow-md`, `shadow-lg`, `shadow-xl`, `shadow-2xl`, `shadow-3xl`
+* `shadow-*-skeuomorphic` samo ako dizajn zahtijeva suptilan skeuomorfizam.
+
+### 5.2 Fokus ring
+
+Koristi isključivo `effect.focus rings.*`:
+
+* `focus-ring` (standard)
+* `focus-ring-error` (error state)
+* Varijante sa sjenama: `focus-ring-shadow-xs`, `focus-ring-shadow-sm` itd.
+
+Pravilo: svaka interaktivna komponenta mora imati vidljiv fokus (WCAG AA).
+
+---
+
+## 6) Boje
+
+### 6.1 Primitivna paleta
+
+Primitivne boje su u `color.*` i uključuju skale za:
+
+* `color.gray (light mode).*` i `color.gray (dark mode).*`
+* `color.blue.*`, `color.error.*`, `color.warning.*`, `color.success.*`
+* dodatne skale (indigo, violet, teal, cyan, orange, yellow…)
+
+### 6.2 Semantičke boje (obavezni prioritet)
+
+Semantika se koristi za tekst, pozadine, obrube i foreground:
+
+#### Tekst
+
+Koristi `1. color modes.colors.text.*`:
+
+* `text-primary (900)`
+* `text-secondary (700)`
+* `text-tertiary (600)`
+* `text-quaternary (500)`
+* `text-placeholder`, `text-disabled`
+* `text-error-primary (600)`, `text-warning-primary (600)`, `text-success-primary (600)`
+* `text-primary_on-brand` i `*_on-brand` varijante za obrnute kontraste
+
+#### Border
+
+Koristi `1. color modes.colors.border.*`:
+
+* `border-primary`, `border-secondary`, `border-tertiary`
+* `border-disabled`, `border-error`, `border-error_subtle`
+
+#### Background
+
+Koristi `1. color modes.colors.background.*`:
+
+* `bg-primary`, `bg-secondary`, `bg-tertiary`, `bg-quaternary`
+* `bg-active`, `bg-disabled`, `bg-overlay`
+* `bg-error-primary`, `bg-warning-primary`, `bg-success-primary` (i subtle varijante)
+
+#### Foreground
+
+Koristi `1. color modes.colors.foreground.*`:
+
+* `fg-primary (900)`, `fg-secondary (700)`, `fg-tertiary (600)`, `fg-quaternary (500)`
+* `fg-error-primary`, `fg-warning-primary`, `fg-success-primary`
+* `fg-white` kada je potrebno
+
+#### Effects
+
+Koristi `1. color modes.colors.effects.*` (za overlay/sjene gdje je definisano).
+
+### 6.3 Utility boje (status, badge, icon)
+
+Za male UI elemente koristi `1. color modes.component colors.utility.*`:
+
+* `utility-brand-*`, `utility-gray-*`, `utility-error-*`, `utility-warning-*`, `utility-success-*`, `utility-blue-*` itd.
+
+### 6.4 Komponente: dugmad (icon)
+
+Za ikonice u primarnim/destruktivnim dugmadima:
+
+* `1. color modes.component colors.components.buttons.button-primary-icon`
+* `1. color modes.component colors.components.buttons.button-primary-icon_hover`
+* `1. color modes.component colors.components.buttons.button-destructive-primary-icon`
+* `1. color modes.component colors.components.buttons.button-destructive-primary-icon_hover`
+
+---
+
+## 7) Minimalni standardi komponenti
+
+### 7.1 Dugme
+
+Parametri:
+
+* Radius: `radius-md` ili `radius-lg`
+* Vertikalni padding: `spacing-md` ili `spacing-lg` (zavisno od visine)
+* Horizontalni padding: `spacing-xl` (min), `spacing-2xl` (primarno)
+* Fokus: `focus-ring` ili `focus-ring-error`
+* Tekst: `font.text sm.semibold` ili `font.text md.semibold`
+
+### 7.2 Input / textarea
+
+Parametri:
+
+* Radius: `radius-md`
+* Border: `border-primary` (default), `border-error` (error), `border-disabled` (disabled)
+* Background: `bg-primary` / `bg-secondary` (zavisno od konteksta)
+* Tekst: `text-primary (900)`; placeholder: `text-placeholder`
+* Fokus: `focus-ring`
+
+### 7.3 Card / panel
+
+Parametri:
+
+* Background: `bg-primary` ili `bg-secondary`
+* Border: `border-secondary` (po potrebi), ili shadow
+* Shadow: `shadow-sm` do `shadow-md`
+* Radius: `radius-xl` do `radius-2xl`
+* Unutrašnji padding: `spacing-xl` (min), `spacing-2xl` (standard)
+
+---
+
+## 8) Pristupačnost
+
+1. Kontrast: sve kombinacije teksta i pozadine moraju zadovoljiti WCAG AA.
+2. Fokus stanje: uvijek vidljivo, ne oslanjati se samo na boju.
+3. Interaktivne mete: minimalno 44×44 (mobilno), uz adekvatan padding.
+4. Tipografija: ne koristiti tekst ispod `text-sm` za ključne informacije; `text-xs` samo za pomoćne metapodatke.
+
+---
+
+## 9) Operativni režim za „usvajanje sistema“ u postojećem dizajnu
+
+Ovo je pravilo mapiranja postojećih vrijednosti na tokene:
+
+1. **Boje** (*colors*): svaku postojeću hex vrijednost mapirati na najbliži semantički token (`text-*`, `bg-*`, `border-*`, `fg-*`). Ako nije moguće, mapirati na najbliži primitvni token (`color.*`).
+2. **Razmaci** (*spacing*): svaki ručni razmak zaokružiti na najbliži `spacing-*` (2/4/6/8/12/16/20/24/32/40/48/64…).
+3. **Radius** (*radius*): svaki ručni radius mapirati na najbliži `radius-*`.
+4. **Tipografija** (*typography*): svaku tekstualnu definiciju mapirati na postojeći `font.*` stil (veličina + težina).
+5. **Efekti** (*effects*): sjene i fokus mapirati na `effect.shadows.*` i `effect.focus rings.*`.
+6. **Layout** (*layout*): primijeniti `grid.*` i `container-*` vrijednosti kao osnovu za responsive ponašanje.
