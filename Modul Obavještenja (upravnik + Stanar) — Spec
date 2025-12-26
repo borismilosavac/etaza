@@ -1,6 +1,31 @@
 # Zgrada Plus — Modul **Obavještenja** (*Notifications*) — kompletna specifikacija v2.0
 
+![WCAG AA](https://img.shields.io/badge/WCAG-2.1%20AA-2A6EF3) ![Flutter](https://img.shields.io/badge/Framework-Flutter-02569B) ![Platforms](https://img.shields.io/badge/Platforms-Web%20%7C%20iOS%20%7C%20Android-111)
+
+> [!IMPORTANT]
 > **Namjena** (*Purpose*): Jedinstvena referenca koju bez dodatnih pojašnjenja razumiju **AI alati za dizajn**, **UI/UX dizajneri** i **developeri**. Dokument je „source of truth“ za informacijski model, tokove, komponente, stanja, validacije, pristupačnost, analitiku i QA.
+
+## Sadržaj
+
+* [1. Domen i ciljevi](#1-domen-i-ciljevi)
+* [2. Glosar (kanonska terminologija)](#2-glosar-kanonska-terminologija)
+* [3. Informaciona arhitektura (IA)](#3-informaciona-arhitektura-ia)
+* [4. UX tokovi (state machine definicije)](#4-ux-tokovi-state-machine-definicije)
+* [5. UI specifikacija (komponente + props)](#5-ui-specifikacija-komponente--props)
+* [6. Validacije i greške (normativ)](#6-validacije-i-greške-normativ)
+* [7. Freemium vs Premium (egzekutivni rezime)](#7-freemium-vs-premium-egzekutivni-rezime)
+* [8. Notifikacije i kanali](#8-notifikacije-i-kanali)
+* [9. Privatnost, sigurnost, compliance](#9-privatnost-sigurnost-compliance)
+* [10. Model podataka (Firestore referenca)](#10-model-podataka-firestore-referenca)
+* [11. API ugovori (REST skica)](#11-api-ugovori-rest-skica)
+* [12. Plan switch (Freemium ↔ Plus)](#12-plan-switch-freemium--plus)
+* [13. Pristupačnost (kontrolna lista)](#13-pristupačnost-kontrolna-lista)
+* [14. Performanse i offline](#14-performanse-i-offline)
+* [15. Analitika (eventi i KPI)](#15-analitika-eventi-i-kpi)
+* [16. QA scenariji (prihvatni kriterijumi)](#16-qa-scenariji-prihvatni-kriterijumi)
+* [17. Figma artefakti (obavezno)](#17-figma-artefakti-obavezno)
+* [18. Tekstualni standard (microcopy)](#18-tekstualni-standard-microcopy)
+* [19. Flutter implementacija — smjernice za razvoj](#19-flutter-implementacija--smjernice-za-razvoj)
 
 ---
 
