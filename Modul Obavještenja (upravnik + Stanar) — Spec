@@ -1,0 +1,523 @@
+# Zgrada Plus — Modul **Obavještenja** (*Notifications*) — kompletna specifikacija v2.0
+
+> **Namjena** (*Purpose*): Jedinstvena referenca koju bez dodatnih pojašnjenja razumiju **AI alati za dizajn**, **UI/UX dizajneri** i **developeri**. Dokument je „source of truth“ za informacijski model, tokove, komponente, stanja, validacije, pristupačnost, analitiku i QA.
+
+---
+
+## 1. Domen i ciljevi
+
+* **Domen**: Komunikacija u stambenim zajednicama (Banja Luka, RS/BiH kontekst).
+* **Ciljevi**: pravovremena isporuka obavještenja, minimalna zavisnost od PII, potpuna čitljivost offline, skalabilnost na više zgrada (premium), auditabilnost administrativnih radnji.
+* **Uloge** (*Roles*): **Upravnik** (*Manager*), **Stanar** (*Resident*).
+* **Platforme**: **Web** (desktop) + **Mobilna** (iOS/Android, PWA).
+* **Standardi**: **WCAG 2.1 AA**, **ΔE ≤ 2**, tastaturna navigacija, fokus outline, dinamičko skaliranje fonta, tap target ≥ **44 px**.
+
+---
+
+## 2. Glosar (kanonska terminologija)
+
+* **Obavještenje** (*Notification*): strukturisana poruka ka stanarima.
+* **Tip** (*Type*): **Opšte**, **Tehničko**, **Finansijsko**, **Hitno**.
+* **Status** (*State*): **Draft**, **Scheduled**, **Active**, **Retracted**, **Archived**.
+* **Pin**: vizuelno fiksiranje „Hitno“ 24/48 h (premium).
+* **Segment**: skup ciljeva (zgrada/ulaz/sprat/stan).
+* **Thread**: privatna 1:1 poruka stanar↔upravnik, vezana za obavještenje.
+* **Digest**: sažetak novih obavještenja (periodični).
+
+---
+
+## 3. Informaciona arhitektura (IA)
+
+### 3.1 Upravnik (Web/Mob)
+
+* **Glavna navigacija**: Kontrolna tabla → **Obavještenja** (Lista, Novo, Šabloni, Analitika*) → Kvarovi → Finansije → Postavke.
+* **Detalj obavještenja**: tabovi **Sadržaj**, **Meta**, **Prilozi**, **Status**, **Poruke**.
+
+### 3.2 Stanar (Mob/Web)
+
+* **Bottom nav**: Početna, **Obavještenja**, Finansije, Više.
+* **Detalj**: Sadržaj, Prilozi, Detalji, Akcije (Preuzmi, *Važno*, *Odgovori*).
+
+---
+
+## 4. UX tokovi (state machine definicije)
+
+### 4.1 Životni ciklus obavještenja
+
+```
+Draft ──publish──▶ Active ──expire──▶ Archived
+   │                   │
+   ├─schedule──────────┘
+   └─retract──────────▶ Retracted
+```
+
+* **Guard**: `scheduleAt ≥ now+5min` (premium).
+* **Pin**: dozvoljen samo kada `type=Hitno` (premium) → `pinForHours ∈ {24,48}`.
+
+### 4.2 Upravnik: kreiranje i objava (wizard 4 koraka)
+
+1. **Sadržaj**: naslov (5–120), tijelo (≥10), tip.
+2. **Meta**: ciljanje (freemium: cijela zgrada; premium: ulaz/sprat/stan/više zgrada).
+3. **Dodatno**: prilozi (freemium 1×5 MB; premium 5×10 MB), *Hitno*+Pin (premium), Zakazivanje (premium).
+4. **Pregled/Objava**: rezime + validacije + procjena dometa.
+
+### 4.3 Stanar: konzumacija
+
+* **Feed** → **Detalj** → Akcije: *Preuzmi*, *Važno* (premium), *Odgovori upravniku* (premium) → Thread sheet.
+
+### 4.4 Poruke (threads)
+
+* **Stanar** inicira thread (premium).
+* **Upravnik** vidi više niti, filtrira, odgovara, označava „riješeno“.
+* Model: 1:1 po stanu; nema javnih komentara.
+
+---
+
+## 5. UI specifikacija (komponente + props)
+
+### 5.1 Tokeni (Figma variables)
+
+* **Boje**: `Primary #2A6EF3`, `Accent #EAD7A6`, `Bg #F5F6F8`, `Success #4C7C5A`, `Text #0E1116`.
+* **Tipografija**: Naslov `600/18–22`, Telo `400/14–16`, Mali `400/12–13`.
+* **Spacing**: 8‑pt grid. **Radius**: 12–16. **Outline** fokus: 2 px `Primary`.
+
+### 5.2 Upravnik — liste i forme
+
+* **List/Table** kolone: Tip(badge), Naslov, Meta(Zgrada/Segment), Datum, Status, Otvaranja*, Akcije.
+* **Filter bar**: Type, Status, Period, Zgrada* (multi, premium).
+* **Wizard**: stepper (4), validacija inline, autosave draft na 5 s.
+* **Detail**: tabovi; desni panel „Poruke“ (master–detail u web splitu).
+
+### 5.3 Stanar — feed i detalj
+
+* **Feed karta**: Tip(badge) • Naslov(2 reda) • Meta • Datum • Status(badge). Overflow: Preuzmi, Otvori.
+* **Filter overlay**: Tip, Period (freemium) + Status (premium).
+* **Detalj**: Hero (Naslov + Tip + Status) → Tijelo → Prilozi (lista, premium inline preview) → Detalji (Publika, Objavljeno, Vidljivo do) → Akcije.
+
+### 5.4 Komponente (AI‑readable props)
+
+* `Badge { kind: "type|status|urgent|pin|important", label: string }`
+* `Card.Notification { title, type, status, meta, date, hasAttachments }`
+* `Uploader { accept: [pdf,jpg,png,docx], maxFiles: 1|5, maxSizeMB: 5|10 }`
+* `DateTimePicker { mode:"schedule", minOffsetMin:5 }`
+* `ThreadList.Item { unitLabel, lastMessage, unread:boolean, hasAttachment:boolean, status:"open|in_progress|resolved" }`
+* `ThreadView { messages[], composerEnabled:boolean }`
+
+---
+
+## 6. Validacije i greške (normativ)
+
+* **Naslov**: regex `^.{5,120}$` → `VAL_TITLE_LEN`.
+* **Tijelo**: `minLen=10` → `VAL_BODY_LEN`.
+* **Prilozi**: tip ∈ {pdf,jpg,png,docx}; `size ≤ 5 MB` freemium / `≤ 10 MB` premium; `count ≤ 1|5` → `ATT_TYPE`, `ATT_SIZE`, `ATT_COUNT`.
+* **Schedule**: `scheduleAt ≥ now+5m` → `SCH_MIN_OFFSET`.
+* **Pin**: `type == hitno && pinForHours∈{24,48}` → `PIN_SCOPE`.
+* **Autorizacija**: premium guard → `AUTH_PLAN_REQUIRED`.
+
+**Greške (kopije):**
+
+* `VAL_TITLE_LEN`: **Naslov prekratak ili predug.**
+* `VAL_BODY_LEN`: **Unesite više detalja.**
+* `ATT_TYPE/SIZE/COUNT`: **Prilog nije podržan/Prevelik/Previše fajlova.**
+* `SCH_MIN_OFFSET`: **Vrijeme mora biti ≥ 5 min od sada.**
+* `PIN_SCOPE`: **Pin je dozvoljen samo za Hitno (24/48 h).**
+* `AUTH_PLAN_REQUIRED`: **Plus funkcija.**
+
+---
+
+## 7. Freemium vs Premium (egzekutivni rezime)
+
+### 7.1 Upravnik
+
+| Kategorija  | Freemium                   | Premium                       |
+| ----------- | -------------------------- | ----------------------------- |
+| Kreiranje   | Standard forma             | Wizard + Pregled              |
+| Tipovi      | Opšte/Tehničko/Finansijsko | + Hitno                       |
+| Prilozi     | 1×5 MB                     | 5×10 MB + pretpregled         |
+| Ciljanje    | Cijela zgrada              | Ulaz/Sprat/Stan + Više zgrada |
+| Kanali      | In‑app + Push              | + SMS (Hitno)                 |
+| Zakazivanje | —                          | scheduleAt                    |
+| Pin         | —                          | 24/48 h                       |
+| Arhiva      | 90 dana                    | 12 mjeseci + filteri          |
+| Povlačenje  | Do 24 h                    | + Audit log                   |
+| Analitika   | Sent/Open                  | Kanali + CSV + Trend          |
+| Šabloni     | —                          | Da                            |
+| Poster      | Ručni QR                   | Batch + scan count            |
+
+### 7.2 Stanar
+
+| Kategorija | Freemium         | Premium                              |
+| ---------- | ---------------- | ------------------------------------ |
+| Feed       | Tip + Period     | + Status                             |
+| Detalj     | Download priloga | + Inline preview                     |
+| Akcije     | —                | Označi kao važno, Odgovori upravniku |
+| Hitno      | Bez pina         | Pin 24/48 h                          |
+| Arhiva     | 90 dana          | 12 mjeseci                           |
+| Offline    | 10 stavki        | 20 stavki                            |
+| Digest     | In‑app sedmični  | Email dnevni/sedmični + in‑app       |
+
+---
+
+## 8. Notifikacije i kanali
+
+### 8.1 Push (payload)
+
+```
+{
+  "title": "HITNO: Kvar na vodovodu",
+  "body": "Zatvoriti ventile na ulazu B. Detalji u aplikaciji.",
+  "data": { "type":"notification", "notificationId":"abc123", "buildingId":"BLDG-1", "urgent":true, "pinForHours":24 }
+}
+```
+
+* Rate limit: `1 push / korisnik / obavještenje`.
+
+### 8.2 Email (subject/preheader/HTML)
+
+* **Subject**: `[Obavještenje] {Naslov} — {Zgrada}`; *Hitno*: `[HITNO] …`.
+* **Preheader**: prvih 80 znakova tijela.
+* **Prilozi**: link „Preuzmi u aplikaciji“, bez attachment‑a.
+
+### 8.3 SMS (Hitno, premium)
+
+* ≤ 140 znakova. Bez linka osim ako je neophodno.
+
+### 8.4 Digest
+
+* Freemium: sedmični in‑app. Premium: dnevni/sedmični email + in‑app.
+
+---
+
+## 9. Privatnost, sigurnost, compliance
+
+* Bez centralnog izlaganja PII (telefon/email opcionalno; kanali na opt‑in).
+* Push „topic‑based“ (`building-*`, `entrance-*`, `floor-*`).
+* QR read‑only linkovi: **TTL**, **noindex**, rate‑limit.
+* Audit log (premium) za povlačenja i administrativne akcije.
+
+---
+
+## 10. Model podataka (Firestore referenca)
+
+```json
+/notifications/{id} : {
+  "title": "string",
+  "body": "string",
+  "type": "opšte|tehničko|finansijsko|hitno",
+  "buildings": ["BLDG-1"],
+  "segments": [{"entrance":"A","floor":1,"unitId":"A-101"}],
+  "attachments": [{"name":"file.pdf","url":"…","mime":"application/pdf","size":123456}],
+  "urgent": true,
+  "pinForHours": 24,
+  "scheduleAt": 1735190400000,
+  "status": "draft|scheduled|active|retracted|archived",
+  "isActive": true,
+  "metrics": { "sent": 120, "opened": 87 },
+  "createdAt": 1735104000000,
+  "expiresAt": 1737696000000
+}
+
+/notifications/{id}/threads/{threadId} : {
+  "unitRef": {"buildingId":"BLDG-1","entrance":"B","floor":2,"unitId":"B-204"},
+  "participantUserId": "uid123",
+  "status": "open|in_progress|resolved",
+  "lastMessageAt": 1735200000000,
+  "unreadForManager": 1,
+  "hasAttachment": true
+}
+
+/notifications/{id}/threads/{threadId}/messages/{messageId} : {
+  "from": "resident|manager",
+  "body": "string",
+  "attachments": [{"name":"img.jpg","url":"…","mime":"image/jpeg","size":234567}],
+  "createdAt": 1735200300000,
+  "readByManager": false
+}
+```
+
+**Indeksi**: `(buildings[], createdAt DESC)`, `(status, createdAt DESC)`, `(threads.lastMessageAt DESC)`.
+
+---
+
+## 11. API ugovori (REST skica)
+
+* `POST /notifications` — kreiraj (premium garde za: segmentacija, schedule, pin).
+* `PATCH /notifications/{id}` — uredi/povuci.
+* `POST /notifications/{id}/publish` — objava odmah.
+* `GET /notifications` — lista + filteri.
+* `GET /notifications/{id}` — detalj.
+* `POST /notifications/{id}/threads` — otvori thread (stanar premium).
+* `POST /notifications/{id}/threads/{tid}/messages` — pošalji poruku.
+
+**HTTP greške**: `400 VAL_*`, `401 UNAUTH`, `403 AUTH_PLAN_REQUIRED`, `404 NF`, `409 CONFLICT`, `413 PAYLOAD_TOO_LARGE`.
+
+---
+
+## 12. Plan switch (Freemium ↔ Plus)
+
+* **Segmentirani prekidač** (QA/Design preview): „Freemium | Plus“.
+* Efekti: prikaz/zaključavanje premium kontrola, pin „Hitno“, status filteri, inline preview, reply.
+* Persistenca: lokalna (prototip), server entitlements (produkcija).
+
+---
+
+## 13. Pristupačnost (kontrolna lista)
+
+* Kontrast ≥ 4.5:1; fokus outline; `role=dialog` za modal/overlay; `aria-live=polite` za toaste; `Tab` redoslijed;
+* Label/Descriptive text za inpute; alt tekst za ikone tipova; dinamičko skaliranje fonta.
+
+---
+
+## 14. Performanse i offline
+
+* Lista render ≤ **300 ms** (batch 25); detalj ≤ **150 ms** (keširano tijelo).
+* Push delivery ≤ **30 s**; SMS (Hitno) ≤ **120 s**.
+* Offline: LRU 10/20 stavki; retry upload/download; expiring cache po planu (90 d / 12 mj).
+
+---
+
+## 15. Analitika (eventi i KPI)
+
+**Eventi:**
+
+* `notif_publish`, `notif_retract`, `notif_open`, `notif_download`, `notif_pin`, `notif_schedule`, `notif_thread_opened`, `notif_message_sent`, `plan_switch_toggle`.
+
+**KPI:**
+
+* Coverage (push/email/sms), Open rate 24/72h, Pin uplift, QR scans, Avg time‑to‑open.
+
+---
+
+## 16. QA scenariji (prihvatni kriterijumi)
+
+1. Upravnik kreira i objavi sva 4 tipa; validacije i guardovi rade.
+2. Zakazivanje (premium) aktivira u tačno vrijeme; push isporuka.
+3. Hitno+Pin (premium) drži 24/48 h na vrhu feed‑a; uklanja se po isteku.
+4. Stanar vidi feed, filtrira po tipu/periodu (premium i status); detalj bez metrika.
+5. Stanar premium šalje poruku; upravnik vidi više niti, označava riješeno; badge nepročitanih tačan.
+6. Poster QR generisan; TTL link funkcioniše; bez PII.
+7. Offline: feed i detalj dostupni (10/20); upload/download retry.
+
+---
+
+## 17. Figma artefakti (obavezno)
+
+* **Sitemap** modula; **User flows**: Upravnik (wizard, poruke), Stanar (feed, detalj, reply).
+* **Wireframes** i **Hi‑fi** varijante (freemium/premium) sa *plan switch* preview‑om.
+* **Komponentna biblioteka**: Badge/Chip/Card/Uploader/DatePicker/Toast/Thread.
+* **Prototip**: klik‑tokovi + offline i fail stateovi.
+
+---
+
+## 18. Tekstualni standard (microcopy)
+
+* Dugmad: **Objavi**, **Zakaži**, **Povuci**, **Preuzmi**, **Preuzmi sve**, **Označi kao važno**, **Odgovori upravniku**.
+* Notifikacije: **Objavljeno. Zakazano. Povučeno. Poruka poslata. Preuzimanje pokrenuto. Keš verzija (offline).**
+* Empty: **Nema obavještenja za odabrane filtere.**
+
+— Kraj specifikacije —
+
+## 19. Flutter implementacija — smjernice za razvoj
+
+### 19.1 Arhitektura
+
+* **Slojna**: `data` (REST/FCM/DB) → `domain` (use‑case, modeli) → `presentation` (UI + state).
+* **State management**: **Riverpod** ili **Bloc/Cubit** (izabrati jedan; primjeri ispod sa Riverpod).
+* **Ruting**: **go_router** sa deklarativnim rutama i deep‑link podrškom.
+* **Reaktivnost**: `StreamProvider`/`StateNotifier` za feed, detalj, threadove.
+
+### 19.2 Paketi
+
+* `firebase_core`, `firebase_messaging`, `flutter_local_notifications` (push).
+* `go_router` (navigacija), `hooks_riverpod` (stanje).
+* `dio` ili `http` + `retry` (API).
+* `freezed`, `json_serializable` (modeli, sealed state).
+* `hive` ili `drift` (offline keš + LRU).
+* `flutter_markdown` (render tijela obavještenja).
+* `image_picker`/`file_picker`, `open_filex` (prilozi).
+* `intl`, `flutter_i18n` ili `easy_localization` (i18n).
+* `flutter_lints`, `very_good_analysis` (lint).
+
+### 19.3 Navigacija i deep‑linkovi (go_router)
+
+* Rute: `/notifications`, `/notifications/:id`, `/notifications/:id/thread` (sheet).
+* Deep‑link iz push‑a: `app://notifications/:id`.
+* Guard: entitlement provjere za premium UI (plan switch samo za QA).
+
+### 19.4 Modeli (Dart)
+
+```dart
+@freezed
+class NotificationType with _$NotificationType {
+  const factory NotificationType.general() = _General;
+  const factory NotificationType.technical() = _Technical;
+  const factory NotificationType.financial() = _Financial;
+  const factory NotificationType.urgent() = _Urgent;
+}
+
+@freezed
+class NotificationItem with _$NotificationItem {
+  const factory NotificationItem({
+    required String id,
+    required String title,
+    required String body,
+    required NotificationType type,
+    required DateTime createdAt,
+    DateTime? expiresAt,
+    required String status, // draft|scheduled|active|retracted|archived
+    required List<Attachment> attachments,
+    required Audience audience,
+    int? pinForHours,
+  }) = _NotificationItem;
+  factory NotificationItem.fromJson(Map<String, dynamic> json) => _$NotificationItemFromJson(json);
+}
+
+@freezed
+class ThreadMessage with _$ThreadMessage {
+  const factory ThreadMessage({
+    required String id,
+    required String from, // resident|manager
+    required String body,
+    required DateTime createdAt,
+    @Default([]) List<Attachment> attachments,
+    @Default(false) bool readByManager,
+  }) = _ThreadMessage;
+  factory ThreadMessage.fromJson(Map<String, dynamic> json) => _$ThreadMessageFromJson(json);
+}
+```
+
+### 19.5 Stanja (sealed) za UI tokove
+
+```dart
+@freezed
+class FeedState with _$FeedState {
+  const factory FeedState.loading() = _Loading;
+  const factory FeedState.data({required List<NotificationItem> items, required bool hasMore}) = _Data;
+  const factory FeedState.empty() = _Empty;
+  const factory FeedState.error(String message) = _Error;
+}
+
+@freezed
+class ThreadState with _$ThreadState {
+  const factory ThreadState.newThread() = _NewThread;
+  const factory ThreadState.sending() = _Sending;
+  const factory ThreadState.open({required List<ThreadMessage> messages}) = _Open;
+  const factory ThreadState.offlineQueue({required List<ThreadMessage> queued}) = _OfflineQueue;
+  const factory ThreadState.fail(String message) = _Fail;
+}
+```
+
+### 19.6 Riverpod provideri (primjer)
+
+```dart
+final planProvider = StateProvider<Plan>((ref) => Plan.freemium);
+final feedProvider = StateNotifierProvider<FeedController, FeedState>((ref) => FeedController(ref));
+final threadProvider = StateNotifierProvider.family<ThreadController, ThreadState, String>((ref, notifId) => ThreadController(ref, notifId));
+```
+
+### 19.7 Servisi
+
+```dart
+abstract class NotificationApi {
+  Future<List<NotificationItem>> list({int page, Map<String, dynamic>? filters});
+  Future<NotificationItem> get(String id);
+  Future<void> sendMessage(String notificationId, ThreadMessage message);
+}
+
+class NotificationRepository {
+  final NotificationApi api; final NotificationCache cache;
+  Future<List<NotificationItem>> list(...) async { /* cache-first + network */ }
+  // LRU: max 10/20 prema planu
+}
+```
+
+### 19.8 Offline i keš (Hive)
+
+* Box `notif_feed`: ključ `plan:freemium|premium` → lista ID‑eva.
+* Box `notif_detail`: `id → NotificationItem`.
+* Box `threads`: `notificationId → ring buffer poruka`.
+* LRU: 10 (freemium) / 20 (premium) uz evikciju najstarijih; TTL 90 d / 12 mj.
+
+### 19.9 Push (FCM) + lokalne notifikacije
+
+* `firebase_messaging` inicijalizacija; zahtjev permisija iOS.
+* Android kanali: `urgent` (visok prioritet), `default`.
+* `onMessageOpenedApp`: navigacija na `/notifications/:id`.
+* Tihi action „markAsRead“ opciono kroz `data` + lokalna obrada.
+
+### 19.10 Email/SMS
+
+* Email šalje backend; u aplikaciji samo deep‑link otvaranje.
+* SMS samo kao backend kanal za Hitno; bez UI indikatora.
+
+### 19.11 UI komponente (Flutter)
+
+```dart
+class NotificationCard extends StatelessWidget {
+  final NotificationItem item; final bool isPremium; 
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: _TypeBadge(item.type),
+      title: Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: Text(_metaLabel(item.audience)),
+      trailing: _StatusBadge(item.status),
+      onTap: () => context.push('/notifications/${item.id}'),
+    );
+  }
+}
+```
+
+### 19.12 Detalj ekrana
+
+* `SliverAppBar` + `CustomScrollView`; sekcije: hero, tijelo (`MarkdownBody`), prilozi (lista sa `OpenFilex`), detalji.
+* Akcije: `Preuzmi sve`, `Označi kao važno` (premium), `Odgovori upravniku` (premium → `showModalBottomSheet`).
+
+### 19.13 Pristupačnost (Flutter)
+
+* `Semantics` oko ključnih elemenata; `excludeSemantics` gdje je potrebno.
+* Poštovati `MediaQuery.textScaleFactor` i `accessibleNavigation`.
+* Kontrast kroz teme; fokus preko `FocusTraversalGroup` i `Focus` indikatora.
+* Dodati `tooltip`/`semanticsLabel` na ikone badgeva i akcija.
+
+### 19.14 Performanse
+
+* Infinite list sa `ListView.builder` i `AutomaticKeepAliveClientMixin`.
+* Debounce filtera 250 ms; `compute` za teže JSON parsiranje.
+* Slike/prilozi: `cached_network_image` sa veličinama i placeholderima.
+
+### 19.15 Testovi
+
+* **Unit**: serializacija modela, use‑case logika.
+* **Widget**: Feed/Detalj/Thread sheet stanja (loading/empty/data/error).
+* **Golden**: ključne kartice i badgevi.
+* **Integration**: deep‑link iz push‑a do detalja.
+
+### 19.16 CI/CD
+
+* `flutter analyze` + `dart test` + golden regrese.
+* **flavori**: `dev`, `staging`, `prod`; FCM ključevi po flavoru.
+* `fastlane` ili `codemagic` pipeline.
+
+### 19.17 Internacionalizacija
+
+* `arb` fajlovi; ključevi: `notif.title`, `notif.type.general`, `notif.action.reply`, …
+* Datumi `DateFormat('dd.MM.yyyy HH:mm')`.
+
+### 19.18 Analitika
+
+* `firebase_analytics`: `notif_open`, `notif_reply_click`, `plan_switch_toggle`, `pin_viewed`.
+
+### 19.19 Sigurnost
+
+* Tokeni i ključevi u `--dart-define` ili `env`.
+* Validacija entitlementa na API sloju; UI samo vizuelna ograničenja.
+* Download linkovi sa kratkim **TTL**.
+
+### 19.20 Edge‑caseovi
+
+* Povučeno obavještenje: prikaz statusa, onemogući reply.
+* Istek pin‑a: UI se automatski osvježi (timer + provider notifikacija).
+* Nema mreže: banner + queue za thread poruke.
+
+— Kraj specifikacije —
