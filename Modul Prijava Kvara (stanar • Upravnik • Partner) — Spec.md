@@ -1,4 +1,4 @@
-# Zgrada Plus — Modul **Prijava kvara** (*Issue Reporting*) — kompletna specifikacija v1.0
+# Zgrada Plus — Modul **Prijava kvara** (*Issue Reporting*) — kompletna specifikacija
 
 > [!IMPORTANT]
 > Jedinstveni izvor istine za **UI/UX**, **Flutter razvoj** i **operativu**. Uloge: **Stanar** (*Resident*), **Upravnik** (*Manager*), **Partner/Izvođač** (*Vendor/Contractor*). Usklađeno sa **WCAG 2.1 AA** i internim pravilima privatnosti (telefon/email opcioni).
